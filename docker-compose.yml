@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: woxa_db
+    restart: always
+    environment:
+      POSTGRES_USER: woxa_user
+      POSTGRES_PASSWORD: woxa_password123
+      POSTGRES_DB: woxa_db
+    ports:
+      - "5433:5432"   # ← ไม่ต้องแก้ครับ ใช้ 5433 ได้เลย
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - woxa_network
+    healthcheck:                          # ← เพิ่มตรงนี้!
+      test: ["CMD-SHELL", "pg_isready -U woxa_user -d woxa_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./crud-backend
+      dockerfile: Dockerfile
+    container_name: woxa_backend
+    restart: always
+    environment:
+      DB_HOST: postgres       # ← ใน Docker ใช้ชื่อ service
+      DB_PORT: 5432           # ← ใน Docker network ใช้ 5432 (internal port)
+      DB_USERNAME: woxa_user
+      DB_PASSWORD: woxa_password123
+      DB_NAME: woxa_db
+      JWT_SECRET: your_super_secret_jwt_key_here
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy    # ← รอจน postgres healthy แล้วค่อย start
+    networks:
+      - woxa_network
+
+volumes:
+  postgres_data:
+
+networks:
+  woxa_network:
+    driver: bridge
