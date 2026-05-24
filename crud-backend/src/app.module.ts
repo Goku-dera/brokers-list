@@ -4,7 +4,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
+import { BrokersModule } from './brokers/brokers.module';
+import { Broker } from './brokers/entities/broker.entity';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -12,8 +16,10 @@ import { User } from './users/user.entity';
     // 1. โหลดค่าจากไฟล์ .env
     // --------------------------------
     ConfigModule.forRoot({
-      isGlobal: true, // ใช้ได้ทุกที่โดยไม่ต้อง import ซ้ำ
+      isGlobal: true,
     }),
+
+    RedisModule,
 
     // --------------------------------
     // 2. เชื่อมต่อ Database
@@ -27,7 +33,7 @@ import { User } from './users/user.entity';
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
     database: configService.get('DB_NAME'),
-    entities: [User],
+    entities: [User, Broker],
     synchronize: false, // dev = true, prod = false
   }),
   inject: [ConfigService],
@@ -37,6 +43,8 @@ import { User } from './users/user.entity';
     // 3. เพิ่ม UsersModule
     // --------------------------------
     UsersModule,
+    AuthModule,
+    BrokersModule,
   ],
 })
 export class AppModule {}

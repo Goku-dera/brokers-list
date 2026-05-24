@@ -1,20 +1,17 @@
-# crud-backend/Dockerfile
 FROM node:20-alpine
+
+# ติดตั้ง client สำหรับเช็คสถานะ DB
+RUN apk add --no-cache postgresql-client
 
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy source
 COPY . .
-
-# Build NestJS
 RUN npm run build
 
-# Copy entrypoint
-COPY docker-entrypoint.sh ./
+# ตรวจสอบว่า docker-entrypoint.sh มีสิทธิ์ execute
 RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3001

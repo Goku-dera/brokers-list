@@ -1,34 +1,15 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-;
+// src/users/users.controller.ts
 
-@Controller('api')
+import { Controller, Get } from '@nestjs/common';
+import { UsersService } from './users.service';
+
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-// users.controller.ts
-@Post('register')
-@HttpCode(HttpStatus.CREATED)
-async register(@Body() createUserDto: CreateUserDto) {
-  const user = await this.usersService.create({
-    fullName: createUserDto.fullName, 
-    email: createUserDto.email,
-    password: createUserDto.password,
-  });
-
-  return {
-    statusCode: 201,
-    message: 'User registered successfully',
-    data: user,
-  };
-}
-
-
-@Get('test')
-@HttpCode(HttpStatus.CREATED)
-async test() {
- 
-return this.usersService.findByEmail("abc@gmail.com");
-}
+  // เอาแค่ route test ไว้ก่อน
+  @Get('test')
+  async test() {
+    return 'Hello from UsersController!';
+  }
 }

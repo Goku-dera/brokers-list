@@ -2,21 +2,18 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './user.entity';
-import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+import { AuthModule } from '../auth/auth.module';
+import { User } from './user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User])
-    // บอกว่า Module นี้ใช้ Table User
-    // TypeORM จะเตรียม Repository ของ User ให้
+    TypeOrmModule.forFeature([User]),
+    
   ],
-  providers: [UsersService],
-  // providers = Service ต่างๆ ที่ Module นี้มี
-  
-  exports: [UsersService],
   controllers: [UsersController],
-  // exports = อนุญาตให้ Module อื่น ใช้ UsersService ได้
+  providers: [UsersService],
+  exports: [UsersService], // ✅ export UsersService ให้ AuthModule ใช้ได้
 })
 export class UsersModule {}

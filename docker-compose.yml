@@ -21,6 +21,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: woxa_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - woxa_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: ./crud-backend
@@ -35,13 +49,32 @@ services:
       DB_NAME: woxa_db
       JWT_SECRET: your_super_secret_jwt_key_here
       PORT: 3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_TTL_SECONDS: 3600
     ports:
       - "3001:3001"
     depends_on:
       postgres:
-        condition: service_healthy    # ← รอจน postgres healthy แล้วค่อย start
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - woxa_network
+
+
+  frontend:
+    build:
+      context: ./crud-frontend
+      dockerfile: Dockerfile
+    container_name: woxa_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend       # ← รอ backend ขึ้นก่อน
+    networks:
+      - woxa_network    
 
 volumes:
   postgres_data:
