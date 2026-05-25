@@ -8,7 +8,7 @@
 
 ## รันทั้งโปรเจกต์ (แนะนำ)
 
-จากโฟลเดอร์ root ของโปรเจกต์:
+จากโฟลเดอร์ root ของโปรเจกต์: C:\dev\brokers-list>
 
 ```bash
 docker compose up --build
@@ -52,14 +52,14 @@ Backend รอ `postgres` และ `redis` healthy ก่อนจึง start
 
 ## Redis Cache (รายการ Brokers)
 
-ใช้แคชเฉพาะ `GET /api/brokers` (รวม search / filter)
+แคช **เฉพรายการทั้งหมด** (`GET /api/brokers` ไม่มี `search` / `type`)
 
-| สถานการณ์ | พฤติกรรม |
-|-----------|----------|
-| มี cache | ตอบจาก Redis ไม่ query DB |
-| ไม่มี cache | query DB แล้วเก็บ cache |
-| Redis ล่ม / ต่อไม่ได้ | query DB ตามปกติ (ไม่ error) |
-| สร้าง / แก้ / ลบ broker | ลบ cache ทั้งหมด แล้ว warm cache รายการหลักใหม่ |
+| Request | พฤติกรรม |
+|---------|----------|
+| `GET /api/brokers` | อ่าน/เขียน Redis key เดียว `brokers:list:all` |
+| `GET /api/brokers?search=...` หรือ `?type=...` | query DB ทุกครั้ง (ไม่แคช — กัน key ระเบิดจากคำค้นต่างกัน) |
+| Redis ล่ม | query DB ตามปกติ |
+| สร้าง / แก้ / ลบ broker | ลบ cache แล้ว warm รายการทั้งหมดใหม่ |
 
 ---
 

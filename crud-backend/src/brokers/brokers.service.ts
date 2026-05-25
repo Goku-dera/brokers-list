@@ -14,7 +14,8 @@ import { UpdateBrokerDto } from './dto/update-broker.dto';
 import { QueryBrokersDto } from './dto/query-brokers.dto';
 import { RedisService } from '../redis/redis.service';
 
-const BROKERS_CACHE_PREFIX = 'brokers:list:';
+/** แคชเฉพรายการทั้งหมด — ไม่แคช search/filter (กัน key ระเบิดเมื่อ user พิมพ์ต่างกัน) */
+const BROKERS_LIST_CACHE_KEY = 'brokers:list:all';
 
 @Injectable()
 export class BrokersService {
@@ -27,19 +28,23 @@ export class BrokersService {
   ) {}
 
   // --------------------------------
-  // GET /api/brokers — cache → DB fallback
+  // GET /api/brokers — แคชเฉพรายการทั้งหมด (ไม่มี search/type)
   // --------------------------------
   async findAll(query: QueryBrokersDto = {}): Promise<Broker[]> {
-    const cacheKey = this.buildCacheKey(query);
+    if (!this.isListAllQuery(query)) {
+      return this.findAllFromDb(query);
+    }
 
-    const cached = await this.redisService.getJson<Broker[]>(cacheKey);
+    const cached = await this.redisService.getJson<Broker[]>(
+      BROKERS_LIST_CACHE_KEY,
+    );
     if (cached) {
-      this.logger.debug(`Cache hit: ${cacheKey}`);
+      this.logger.debug(`Cache hit: ${BROKERS_LIST_CACHE_KEY}`);
       return cached;
     }
 
-    const brokers = await this.findAllFromDb(query);
-    await this.redisService.setJson(cacheKey, brokers);
+    const brokers = await this.findAllFromDb({});
+    await this.redisService.setJson(BROKERS_LIST_CACHE_KEY, brokers);
 
     return brokers;
   }
@@ -108,10 +113,9 @@ export class BrokersService {
     await this.refreshBrokersCache();
   }
 
-  private buildCacheKey(query: QueryBrokersDto): string {
-    const search = query.search?.trim() ?? '';
-    const type = query.type ?? '';
-    return `${BROKERS_CACHE_PREFIX}search:${search}:type:${type}`;
+  /** ใช้ cache ได้เฉพาะเมื่อไม่มี search และไม่มี type filter */
+  private isListAllQuery(query: QueryBrokersDto): boolean {
+    return !query.search?.trim() && !query.type;
   }
 
   private async findAllFromDb(query: QueryBrokersDto): Promise<Broker[]> {
@@ -134,15 +138,13 @@ export class BrokersService {
     return qb.getMany();
   }
 
-  /** ลบ cache ทั้งหมดของรายการ brokers แล้ว warm cache รายการหลัก (ไม่มี filter) */
   private async refreshBrokersCache(): Promise<void> {
-    await this.redisService.deleteByPattern(`${BROKERS_CACHE_PREFIX}*`);
+    await this.redisService.deleteByPattern('brokers:list:*');
 
     if (!this.redisService.isAvailable()) return;
 
     const allBrokers = await this.findAllFromDb({});
-    const defaultKey = this.buildCacheKey({});
-    await this.redisService.setJson(defaultKey, allBrokers);
-    this.logger.debug(`Cache refreshed: ${defaultKey}`);
+    await this.redisService.setJson(BROKERS_LIST_CACHE_KEY, allBrokers);
+    this.logger.debug(`Cache refreshed: ${BROKERS_LIST_CACHE_KEY}`);
   }
 }
