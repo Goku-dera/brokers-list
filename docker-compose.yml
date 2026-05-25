@@ -47,7 +47,7 @@ services:
       DB_USERNAME: woxa_user
       DB_PASSWORD: woxa_password123
       DB_NAME: woxa_db
-      JWT_SECRET: your_super_secret_jwt_key_here
+      JWT_SECRET: 458425c327ac2067ffb3457f8f2e5275cb74ec3bee738e576ad9afc5c9607387733b7eeda89c938bcca542aa8fb4757af36d0a279e144106a8281cd529feaa3a
       PORT: 3001
       REDIS_HOST: redis
       REDIS_PORT: 6379

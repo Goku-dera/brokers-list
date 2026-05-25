@@ -52,12 +52,12 @@ Backend รอ `postgres` และ `redis` healthy ก่อนจึง start
 
 ## Redis Cache (รายการ Brokers)
 
-แคช **เฉพรายการทั้งหมด** (`GET /api/brokers` ไม่มี `search` / `type`)
+แคช **เฉพรายการทั้งหมด** (`GET /api/brokers` )
 
-| Request | พฤติกรรม |
+| Request | การทำงาน |
 |---------|----------|
 | `GET /api/brokers` | อ่าน/เขียน Redis key เดียว `brokers:list:all` |
-| `GET /api/brokers?search=...` หรือ `?type=...` | query DB ทุกครั้ง (ไม่แคช — กัน key ระเบิดจากคำค้นต่างกัน) |
+| `GET /api/brokers?search=...` หรือ `?type=...` | query DB ทุกครั้ง |
 | Redis ล่ม | query DB ตามปกติ |
 | สร้าง / แก้ / ลบ broker | ลบ cache แล้ว warm รายการทั้งหมดใหม่ |
 
